@@ -23,6 +23,11 @@ class _SupabaseHomePageState extends State<HomePage> {
   int currentIndex = 0;
   bool canAddListing = false;
   final user = Supabase.instance.client.auth.currentUser;
+  bool isSearching = false;
+  TextEditingController searchController = TextEditingController();
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
 
   final categories = ['All', 'Real Estate', 'Apartment', 'House', 'Motels'];
 
@@ -130,42 +135,93 @@ class _SupabaseHomePageState extends State<HomePage> {
         child: Column(
           children: [
             // 🔍 Search & Filter Bar
+            // 🔍 Logo + Dynamic Search & Filter Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
+                  // 🏠 App Logo
+                  Image.asset(
+                    'assets/logo/logo.png', // Replace with your asset path
+                    height: 32,
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // 🔍 Animated Search Bar (flexible space between logo and buttons)
                   Expanded(
-                    child: TextField(
-                      onChanged: (query) {
-                        searchQuery = query;
-                        searchListings(query);
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search',
-                        prefixIcon: const Icon(Icons.search),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _isSearching
+                          ? TextField(
+                        key: const ValueKey("searchField"),
+                        controller: _searchController,
+                        onChanged: (query) {
+                          searchQuery = query;
+                          searchListings(query);
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search...',
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
-                      ),
+                      )
+                          : const SizedBox.shrink(), // empty space when not searching
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(12),
+
+                  const SizedBox(width: 12),
+
+                  // 🔍 Search Icon (toggle)
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isSearching = !_isSearching;
+                        if (!_isSearching) {
+                          _searchController.clear();
+                          searchQuery = '';
+                          fetchListings(); // Reset results
+                        }
+                      });
+                    },
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(_isSearching ? Icons.close : Icons.search, color: Colors.red),
                     ),
-                    child: const Icon(Icons.filter_alt, color: Colors.white),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // 🛠 Filter Icon
+                  GestureDetector(
+                    onTap: () {
+                      // Open your filter dialog
+                    },
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.filter_alt, color: Colors.white),
+                    ),
                   ),
                 ],
               ),
             ),
+
+
 
             // 📂 Category Filter Chips
             SizedBox(
