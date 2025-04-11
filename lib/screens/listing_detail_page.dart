@@ -4,10 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:android_intent_plus/android_intent.dart';
-
-
+import 'package:flutter_image_slideshow/flutter_image_slideshow.dart';
 import 'dart:io';
-
 
 class ListingDetailPage extends StatefulWidget {
   final String listingId;
@@ -22,6 +20,7 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
   final supabase = Supabase.instance.client;
   final formatCurrency = NumberFormat.simpleCurrency(name: 'INR');
   Map<String, dynamic>? listing;
+  List<String> images = [];
   bool isLoading = true;
 
   @override
@@ -38,13 +37,25 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
           .eq('id', widget.listingId)
           .single();
 
+      debugPrint('Raw image URLs: ${response['image_url']}');
 
       setState(() {
         listing = response;
+        final dynamic imageUrls = response['image_url'];
+
+        if (imageUrls is List) {
+          images = imageUrls
+              .map((url) => url.toString().replaceAll("listing-image//", "listing-image/"))
+              .toList();
+        } else if (imageUrls is String) {
+          // In case image_url is a comma-separated string
+          images = imageUrls.split(',').map((e) => e.trim()).toList();
+        }
+
         isLoading = false;
       });
     } catch (e) {
-      debugPrint('Error fetching listing details: $e');
+      debugPrint('❌ Error fetching listing details: $e');
       setState(() {
         isLoading = false;
       });
@@ -97,19 +108,44 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: Image.network(
-                    listing!['image_url'] ?? '',
-                    height: 250,
+                  child: images.isNotEmpty
+                      ? ImageSlideshow(
                     width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 250,
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(Icons.image_not_supported, size: 40),
-                      ),
-                    ),
+                    height: 250,
+                    initialPage: 0,
+                    indicatorColor: Colors.blue,
+                    indicatorBackgroundColor: Colors.grey,
+                    autoPlayInterval: 3000,
+                    isLoop: true,
+                    children: images.map((imageUrl) {
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullImageView(imageUrl: imageUrl),
+                            ),
+                          );
+                        },
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(Icons.image_not_supported, size: 40),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  )
+                      : Container(
+                    height: 250,
+                    color: Colors.grey[300],
+                    child: const Center(child: Icon(Icons.image, size: 40)),
                   ),
+
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -154,8 +190,7 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        listing!['description'] ??
-                            'No description available for this listing.',
+                        listing!['description'] ?? 'No description available.',
                         style: const TextStyle(fontSize: 15),
                       ),
                     ],
@@ -175,7 +210,7 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () => openWhatsApp(
-                  '919321852718', // Replace with actual phone number if dynamic
+                  '919321852718',
                   listing!['title'] ?? '',
                   formatCurrency.format(
                     int.tryParse(listing?['price']?.toString() ?? '0') ?? 0,
@@ -220,9 +255,7 @@ class _ListingDetailPageState extends State<ListingDetailPage> {
           ],
         ),
       ),
-
     );
-
   }
 }
 
@@ -249,7 +282,6 @@ void openWhatsApp(String phoneNumber, String listingName, String price, String a
     debugPrint('❌ WhatsApp launch only supported on Android for now.');
   }
 }
-
 
 void sendEmail(String email, String listingName, String price, String address) async {
   final String subject = Uri.encodeComponent('Inquiry about $listingName');
@@ -279,3 +311,29 @@ void sendEmail(String email, String listingName, String price, String address) a
   }
 }
 
+class FullImageView extends StatelessWidget {
+  final String imageUrl;
+
+  const FullImageView({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white, size: 100),
+          ),
+        ),
+      ),
+    );
+  }
+}

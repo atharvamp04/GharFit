@@ -11,12 +11,12 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool isLogin = true;
-  bool showForm = false;
+  bool showForm = true;
 
   final supabase = Supabase.instance.client;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final nameController = TextEditingController(); // For sign up
+  final nameController = TextEditingController();
 
   void loginUser() async {
     try {
@@ -30,7 +30,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         );
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) =>  HomePage()),
+          MaterialPageRoute(builder: (_) => const HomePage()),
               (route) => false,
         );
       }
@@ -53,7 +53,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         );
         setState(() {
           isLogin = true;
-          showForm = true;
         });
       }
     } catch (e) {
@@ -65,136 +64,179 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background Image
-          SizedBox.expand(
-            child: Image.asset(
-              'assets/welcome/home_background.jpg',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+      resizeToAvoidBottomInset: true,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
             children: [
-              const SizedBox(height: 60),
-              // Logo and App Name
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: const [
-                    Icon(Icons.home, color: Colors.white, size: 30),
-                    SizedBox(width: 8),
-                    Text('Nhome', style: TextStyle(color: Colors.white, fontSize: 22)),
-                  ],
+              // Background Image
+              SizedBox.expand(
+                child: Image.asset(
+                  'assets/welcome/home_background.jpg',
+                  fit: BoxFit.cover,
                 ),
               ),
-              const Spacer(),
-              // Headline
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Discover Your\nDream Home',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-              // Bottom White Container
-              Container(
-                width: double.infinity,
-                height: 470,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    // Toggle Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        toggleButton('Login', isLogin),
-                        const SizedBox(width: 10),
-                        toggleButton('Sign Up', !isLogin),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Form Area
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 400),
-                          transitionBuilder: (child, animation) {
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0.0, 0.3),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: FadeTransition(opacity: animation, child: child),
-                            );
-                          },
-                          child: showForm
-                              ? isLogin
-                              ? LoginFormWidget(
-                            key: const ValueKey('login'),
-                            emailController: emailController,
-                            passwordController: passwordController,
-                            onLogin: loginUser,
-                          )
-                              : SignupFormWidget(
-                            key: const ValueKey('signup'),
-                            nameController: nameController,
-                            emailController: emailController,
-                            passwordController: passwordController,
-                            onSignup: signupUser,
-                          )
-                              : const SizedBox.shrink(),
+
+              SafeArea(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: constraints.maxHeight,
+                  child: SingleChildScrollView(
+                    physics: isKeyboardVisible
+                        ? const BouncingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 60),
+                            // Logo
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Image.asset(
+                                  'assets/logo/logo.png',
+                                  height: 36,
+                                ),
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            // Headline
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'Discover Your\nDream Home',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+
+                            // White Form Container
+                            Container(
+                              width: double.infinity,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      buildAnimatedToggleButton('Login', isLogin),
+                                      const SizedBox(width: 10),
+                                      buildAnimatedToggleButton('Sign Up', !isLogin),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 500),
+                                    switchInCurve: Curves.easeInOut,
+                                    switchOutCurve: Curves.easeInOut,
+                                    transitionBuilder: (child, animation) {
+                                      return SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: const Offset(0.0, 0.3),
+                                          end: Offset.zero,
+                                        ).animate(animation),
+                                        child: FadeTransition(opacity: animation, child: child),
+                                      );
+                                    },
+                                    child: showForm
+                                        ? isLogin
+                                        ? LoginFormWidget(
+                                      key: const ValueKey('login'),
+                                      emailController: emailController,
+                                      passwordController: passwordController,
+                                      onLogin: loginUser,
+                                    )
+                                        : SignupFormWidget(
+                                      key: const ValueKey('signup'),
+                                      nameController: nameController,
+                                      emailController: emailController,
+                                      passwordController: passwordController,
+                                      onSignup: signupUser,
+                                    )
+                                        : const SizedBox.shrink(),
+                                  ),
+
+                                  const SizedBox(height: 16),
+                                  const Text("or Login with", style: TextStyle(color: Colors.grey)),
+                                  const SizedBox(height: 16),
+                                  socialButton('Continue with Google', 'assets/welcome/Google.png'),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text("or Login with", style: TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 16),
-                    socialButton('Continue with Google', 'assets/welcome/Google.png'),
-                  ],
+                  ),
                 ),
               ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget toggleButton(String text, bool selected) {
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          isLogin = (text == 'Login');
-          showForm = true;
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: selected ? Colors.black : Colors.white,
-        foregroundColor: selected ? Colors.white : Colors.black,
-        side: const BorderSide(color: Colors.black),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+
+
+
+  Widget buildAnimatedToggleButton(String text, bool selected) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: selected ? Colors.red : Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.red),
       ),
-      child: Text(text),
+      child: TextButton(
+        onPressed: () {
+          setState(() {
+            isLogin = (text == 'Login');
+            showForm = true;
+          });
+        },
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.black,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 
   Widget socialButton(String text, String iconPath) {
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: () {
+        // TODO: Add Google login logic
+      },
       icon: Image.asset(iconPath, height: 24),
       label: Text(text, style: const TextStyle(fontSize: 16)),
       style: OutlinedButton.styleFrom(
@@ -206,7 +248,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 }
 
-
+// Login Form Widget
 class LoginFormWidget extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
@@ -223,16 +265,32 @@ class LoginFormWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-        const SizedBox(height: 10),
-        TextField(obscureText: true, controller: passwordController, decoration: const InputDecoration(labelText: 'Password')),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: onLogin, child: const Text('Login')),
+        customTextField(emailController, 'Email', false),
+        const SizedBox(height: 12),
+        customTextField(passwordController, 'Password', true),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onLogin,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 3,
+            ),
+            child: const Text('Login', style: TextStyle(fontSize: 15)),
+          ),
+        ),
       ],
     );
   }
 }
 
+// Signup Form Widget
 class SignupFormWidget extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController emailController;
@@ -251,15 +309,50 @@ class SignupFormWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
-        const SizedBox(height: 10),
-        TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-        const SizedBox(height: 10),
-        TextField(obscureText: true, controller: passwordController, decoration: const InputDecoration(labelText: 'Password')),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: onSignup, child: const Text('Sign Up')),
+        customTextField(nameController, 'Full Name', false),
+        const SizedBox(height: 12),
+        customTextField(emailController, 'Email', false),
+        const SizedBox(height: 12),
+        customTextField(passwordController, 'Password', true),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onSignup,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 3,
+            ),
+            child: const Text('Sign Up', style: TextStyle(fontSize: 15)),
+          ),
+        ),
       ],
     );
   }
+}
+
+// Custom Text Field (outside any class)
+Widget customTextField(TextEditingController controller, String label, bool isPassword) {
+  return TextFormField(
+    controller: controller,
+    obscureText: isPassword,
+    style: const TextStyle(fontSize: 14),
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(fontSize: 14),
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    ),
+  );
 }
 

@@ -40,6 +40,7 @@ dependencies:
   image_picker: ^1.0.4
   path: ^1.8.3
   mime: ^1.0.4
+  flutter_image_slideshow: ^0.1.5
 
 
 
@@ -51,6 +52,25 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.5
+  flutter_lints: ^3.0.1  # or 4.0.0, keep the latest version
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/GharFit.png"  # Replace with your icon path
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#ffffff"  # Background color
+  image: assets/icon/GharFit.png  # Path to your splash logo
+  android: true
+  ios: true
+  android_gravity: center
+  ios_content_mode: center
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -68,6 +88,8 @@ flutter:
   assets:
     - assets/welcome/Google.png
     - assets/welcome/home_background.jpg
+    - assets/logo/logo.png
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+

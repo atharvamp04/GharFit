@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'listing_detail_page.dart'; // Replace with your correct path
 import './AddListingPage.dart';   // Replace with your correct path
+import 'package:google_fonts/google_fonts.dart';
+
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -126,7 +129,7 @@ class _SupabaseHomePageState extends State<HomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search & Filter Bar
+            // 🔍 Search & Filter Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -155,7 +158,7 @@ class _SupabaseHomePageState extends State<HomePage> {
                     height: 48,
                     width: 48,
                     decoration: BoxDecoration(
-                      color: Colors.black,
+                      color: Colors.red,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.filter_alt, color: Colors.white),
@@ -164,7 +167,7 @@ class _SupabaseHomePageState extends State<HomePage> {
               ),
             ),
 
-            // Category Filter
+            // 📂 Category Filter Chips
             SizedBox(
               height: 40,
               child: ListView.builder(
@@ -185,7 +188,7 @@ class _SupabaseHomePageState extends State<HomePage> {
                         });
                         fetchListings(category: categories[index]);
                       },
-                      selectedColor: Colors.black,
+                      selectedColor: Colors.red,
                       backgroundColor: Colors.grey.shade200,
                       labelStyle: TextStyle(
                         color: isSelected ? Colors.white : Colors.black,
@@ -198,102 +201,213 @@ class _SupabaseHomePageState extends State<HomePage> {
 
             const SizedBox(height: 10),
 
-            // Listings Grid
+            // 🏡 Listings Carousel + 🎉 Student Offers
             Expanded(
-              child: listings.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.75,
-                ),
-                itemCount: listings.length,
-                itemBuilder: (_, index) {
-                  final item = listings[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ListingDetailPage(listingId: item['id']),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 🔥 Hot Deals Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+                      child: Text(
+                        "🌟 Hot Deals For You",
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
                         ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
+                    ),
+                    SizedBox(
+                      height: 300,
+                      child: listings.isEmpty
+                          ? const Center(child: CircularProgressIndicator())
+                          : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: listings.length,
+                        itemBuilder: (_, index) {
+                          final item = listings[index];
+                          final List<String> imageUrls = List<String>.from(item['image_url'] ?? []);
+                          final imageUrl = imageUrls.isNotEmpty ? imageUrls[0] : '';
+
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ListingDetailPage(listingId: item['id']),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.75,
+                              margin: const EdgeInsets.only(right: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                    child: Image.network(
+                                      imageUrl,
+                                      height: 160,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        height: 160,
+                                        color: Colors.grey[300],
+                                        child: const Center(child: Icon(Icons.image_not_supported_outlined)),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item['title'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          formatCurrency.format(item['price']),
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          item['address'] ?? '',
+                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // 🎓 Student Banners
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(16)),
-                            child: Image.network(
-                              item['image_url'] ?? '',
-                              height: 130,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                height: 130,
-                                color: Colors.grey[300],
-                                child: const Center(
-                                  child: Icon(Icons
-                                      .image_not_supported_outlined),
+                          Text(
+                            "🎉 Special for Students!",
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Banner 1
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.purpleAccent, Colors.deepPurple],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Get ₹1000 Off on Your First PG Booking!",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Limited time offer • T&C apply",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              formatCurrency.format(item['price']),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                          const SizedBox(height: 16),
+
+                          // Banner 2
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.orangeAccent, Colors.deepOrange],
+                                begin: Alignment.topRight,
+                                end: Alignment.bottomLeft,
                               ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.location_on, color: Colors.white, size: 28),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    "Now available near top colleges in Mumbai!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0),
-                            child: Text(
-                              item['address'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
 
-      // Bottom Navigation Bar
+      // 📱 Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.black,
+        selectedItemColor: Colors.red,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
         currentIndex: currentIndex,
@@ -311,16 +425,12 @@ class _SupabaseHomePageState extends State<HomePage> {
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           const BottomNavigationBarItem(icon: Icon(Icons.chat), label: "Inbox"),
           if (canAddListing)
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline),
-              label: "Add Listing",
-            ),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.timeline), label: "Activity"),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: "Profile"),
+            const BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: "Add Listing"),
+          const BottomNavigationBarItem(icon: Icon(Icons.timeline), label: "Activity"),
+          const BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );
+
   }
 }
